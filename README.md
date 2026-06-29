@@ -13,9 +13,7 @@ Its core component is **pre-commit-windows-paths**: a global Git hook that runs 
 
 The installation process is described in **install-global-hook.sh**. It creates `~/.config/git/hooks`, places the hook there, and configures `git config --global core.hooksPath ...` so that it applies automatically to all of your Git repositories.
 
-The **README** confirms this purpose and also explains the available environment variables for customizing path length limits and the estimated Windows checkout base path.
-
-In summary, this is a tool for Linux developers and teams that want to stop Windows-incompatible files at commit time, preventing clone or checkout failures later on Windows.
+This is a tool for Linux developers and teams that want to stop Windows-incompatible files at commit time, preventing clone or checkout failures later on Windows.
 
 
 ## Repository Contents
