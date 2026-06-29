@@ -1,15 +1,22 @@
 # Git Pre-Commit Hook For Windows-Safe Paths
 
-Reusable Git `pre-commit` hook for Linux developers who want to stop Windows-incompatible paths before they enter repository history.
+This repository is designed to prevent commits that contain file paths or filenames incompatible with Windows.
 
-It blocks a commit when staged paths would likely cause problems on Windows, including:
+Its core component is **pre-commit-windows-paths**: a global Git hook that runs before every commit. It checks only the staged files and blocks the commit if it detects common Windows compatibility issues, such as:
 
-- forbidden characters
-- trailing spaces or trailing periods
-- reserved names such as `CON`, `AUX`, `COM1`, `LPT1`
-- file or folder names that are too long
-- repository-relative paths that are too long
-- estimated final Windows checkout paths that are too long after adding the clone base folder
+* Forbidden characters in filenames
+* Filenames ending with a space or a period
+* Reserved names such as `CON`, `AUX`, `COM1`, and `LPT1`
+* Path segments that are too long
+* Relative paths that exceed the recommended length
+* Paths that, when cloned on Windows, are likely to exceed the maximum supported path length
+
+The installation process is described in **install-global-hook.sh**. It creates `~/.config/git/hooks`, places the hook there, and configures `git config --global core.hooksPath ...` so that it applies automatically to all of your Git repositories.
+
+The **README** confirms this purpose and also explains the available environment variables for customizing path length limits and the estimated Windows checkout base path.
+
+In summary, this is a tool for Linux developers and teams that want to stop Windows-incompatible files at commit time, preventing clone or checkout failures later on Windows.
+
 
 ## Repository Contents
 
