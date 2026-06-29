@@ -1,5 +1,7 @@
 # Git Pre-Commit Hook For Windows-Safe Paths
 
+Spanish version: [README_ES.md](README_ES.md)
+
 This repository is designed to prevent commits that contain file paths or filenames incompatible with Windows.
 
 Its core component is **pre-commit-windows-paths**: a reusable Git hook that runs before a commit in repositories where you install it. It checks only the staged files and blocks the commit if it detects common Windows compatibility issues, such as:
