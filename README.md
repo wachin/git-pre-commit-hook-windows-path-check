@@ -83,6 +83,154 @@ This variable is only used to estimate the final checkout path on Windows:
 
 If you want these settings always active, place them in your shell startup file such as `~/.bashrc`.
 
+This section is completely **optional**. It allows the hook to be either more strict or more flexible when estimating whether a path could cause problems on Windows.
+
+Let's go through it step by step.
+
+Suppose your repository contains the following file:
+
+```text
+docs/manuales/español/capitulo1/imagenes/tutorial/muy_largo/archivo.txt
+```
+
+The hook needs to answer the following question:
+
+> **"If someone clones this repository on Windows, will the full path be too long?"**
+
+However, there is one problem: **the hook runs on Linux**, so it has no way of knowing where the Windows user will clone the repository.
+
+Instead, it makes an estimate.
+
+For example, if you define:
+
+```bash
+export REPOPATH_SANITIZER_CHECKOUT_ROOT='C:\Users\Washington\Documents\GitHub'
+```
+
+and the repository is named:
+
+```text
+LinuxFileManager
+```
+
+the hook estimates the final Windows checkout path as:
+
+```text
+C:\Users\Washington\Documents\GitHub\
+LinuxFileManager\
+docs\
+manuales\
+español\
+capitulo1\
+imagenes\
+tutorial\
+muy_largo\
+archivo.txt
+```
+
+It then measures the total length of that path.
+
+---
+
+## What does each variable mean?
+
+### 1. Defines the maximum allowed length for the **entire path**.
+
+```bash
+export REPOPATH_SANITIZER_MAX_PATH=260
+```
+
+Defines the maximum allowed length for the **entire path**.
+
+The traditional Windows limit is:
+
+```text
+260 characters
+```
+
+although modern versions of Windows can support longer paths if that feature has been enabled.
+
+If you want to be more permissive, you can use values such as:
+
+```bash
+export REPOPATH_SANITIZER_MAX_PATH=320
+```
+
+or
+
+```bash
+export REPOPATH_SANITIZER_MAX_PATH=1024
+```
+
+---
+
+### 2. This limits the length of **each individual file or directory name**.
+
+```bash
+export REPOPATH_SANITIZER_MAX_SEGMENT=255
+```
+
+This limits the length of **each individual file or directory name**.
+
+For example:
+
+```text
+Project/
+```
+
+is one path segment.
+
+```text
+Documents/
+```
+
+is another.
+
+```text
+file.pdf
+```
+
+is another.
+
+Windows generally does not allow individual file or directory names longer than **255 characters**, even if the total path length is much larger.
+
+---
+
+### 3. Assume the repository will be cloned here
+
+```bash
+export REPOPATH_SANITIZER_CHECKOUT_ROOT='C:\Users\YourUser\Documents\Projects'
+```
+
+This is the most interesting variable.
+
+It tells the hook:
+
+> "Assume the repository will be cloned here."
+
+The hook will then estimate the final checkout path as:
+
+```text
+C:\Users\YourUser\Documents\Projects\
+MyRepository\
+...
+```
+
+If you normally clone your repositories into:
+
+```text
+D:\Git\
+```
+
+you can instead use:
+
+```bash
+export REPOPATH_SANITIZER_CHECKOUT_ROOT='D:\Git'
+```
+
+This will produce a more accurate estimate of the final path length.
+
+
 ## How It Behaves
 
 When a staged path is problematic, the hook blocks the commit and prints:
