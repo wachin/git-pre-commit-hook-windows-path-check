@@ -1,10 +1,6 @@
-# Global Git Hooks For Windows-Safe Paths
+# Git Pre-Commit Hook For Windows-Safe Paths
 
-This folder contains a reusable Git `pre-commit` hook that you can enable for **all** repositories on your Linux system.
-
-The main script is:
-
-- `global-hooks/pre-commit-windows-paths`
+Reusable Git `pre-commit` hook for Linux developers who want to stop Windows-incompatible paths before they enter repository history.
 
 It blocks a commit when staged paths would likely cause problems on Windows, including:
 
@@ -15,19 +11,55 @@ It blocks a commit when staged paths would likely cause problems on Windows, inc
 - repository-relative paths that are too long
 - estimated final Windows checkout paths that are too long after adding the clone base folder
 
+## Repository Contents
+
+- `pre-commit-windows-paths`: main reusable hook
+- `install-global-hook.sh`: installs it as your global Git `pre-commit`
+- `uninstall-global-hook.sh`: removes the global `pre-commit` symlink
+- `README.md`: usage instructions
+
+## Why This Exists
+
+Linux allows many file and folder names that later break `git clone` or `git checkout` on Windows.
+
+Typical failures include:
+
+- a directory ending with periods, such as `Acerca de...`
+- a reserved name such as `AUX.txt`
+- very long file or folder names
+- very deep nested paths that become too long only when cloned into a real Windows folder like `C:\Users\Name\Documents\Projects\repo`
+
+This hook stops those paths at commit time and prints the exact problem so the developer can fix it before pushing.
+
 ## Install Globally
 
-Create a directory for global Git hooks and copy or symlink this script into it as `pre-commit`:
+Clone or download this repository on your Linux machine, then run:
+
+```bash
+chmod +x install-global-hook.sh
+./install-global-hook.sh
+```
+
+That installer:
+
+- marks the hook as executable
+- creates the global hooks directory if needed
+- symlinks `pre-commit-windows-paths` as your global `pre-commit`
+- runs `git config --global core.hooksPath ...`
+
+After that, every `git commit` in every repository using your global Git config will run this hook first.
+
+## Manual Installation
+
+If you prefer to install it manually:
 
 ```bash
 mkdir -p ~/.config/git/hooks
-ln -sf /home/wachin/Dev/AI-dev/repopath-sanitizer/global-hooks/pre-commit-windows-paths ~/.config/git/hooks/pre-commit
-chmod +x /home/wachin/Dev/AI-dev/repopath-sanitizer/global-hooks/pre-commit-windows-paths
+ln -sf "$(pwd)/pre-commit-windows-paths" ~/.config/git/hooks/pre-commit
+chmod +x "$(pwd)/pre-commit-windows-paths"
 chmod +x ~/.config/git/hooks/pre-commit
 git config --global core.hooksPath ~/.config/git/hooks
 ```
-
-After that, every `git commit` in every repository that uses your global Git configuration will run this hook first.
 
 ## Optional Tuning
 
@@ -57,8 +89,24 @@ Example categories you may see:
 - `PATH_TOO_LONG`
 - `CHECKOUT_PATH_TOO_LONG`
 
+## Uninstall
+
+If you want to remove the global hook:
+
+```bash
+chmod +x uninstall-global-hook.sh
+./uninstall-global-hook.sh
+```
+
+If you want to stop using the global hooks directory entirely:
+
+```bash
+git config --global --unset core.hooksPath
+```
+
 ## Notes
 
 - The hook checks only **staged** paths, because those are the ones about to enter history.
-- It works independently of the GUI application.
+- It is self-contained and does not depend on another local project path.
+- It works independently of any GUI application.
 - If a specific repository defines its own `core.hooksPath`, that repository setting overrides the global one.
