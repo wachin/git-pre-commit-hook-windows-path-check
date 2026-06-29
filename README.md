@@ -2,7 +2,7 @@
 
 This repository is designed to prevent commits that contain file paths or filenames incompatible with Windows.
 
-Its core component is **pre-commit-windows-paths**: a global Git hook that runs before every commit. It checks only the staged files and blocks the commit if it detects common Windows compatibility issues, such as:
+Its core component is **pre-commit-windows-paths**: a reusable Git hook that runs before a commit in repositories where you install it. It checks only the staged files and blocks the commit if it detects common Windows compatibility issues, such as:
 
 * Forbidden characters in filenames
 * Filenames ending with a space or a period
@@ -11,16 +11,14 @@ Its core component is **pre-commit-windows-paths**: a global Git hook that runs 
 * Relative paths that exceed the recommended length
 * Paths that, when cloned on Windows, are likely to exceed the maximum supported path length
 
-The installation process is described in **install-global-hook.sh**. It creates `~/.config/git/hooks`, places the hook there, and configures `git config --global core.hooksPath ...` so that it applies automatically to all of your Git repositories.
-
 This is a tool for Linux developers and teams that want to stop Windows-incompatible files at commit time, preventing clone or checkout failures later on Windows.
 
 
 ## Repository Contents
 
 - `pre-commit-windows-paths`: main reusable hook
-- `install-global-hook.sh`: installs it as your global Git `pre-commit`
-- `uninstall-global-hook.sh`: removes the global `pre-commit` symlink
+- `install-hook.sh`: installs it into one target repository
+- `uninstall-hook.sh`: removes it from one target repository
 - `README.md`: usage instructions
 
 ## Why This Exists
@@ -36,34 +34,33 @@ Typical failures include:
 
 This hook stops those paths at commit time and prints the exact problem so the developer can fix it before pushing.
 
-## Install Globally
+## Install In One Repository
 
 Clone or download this repository on your Linux machine, then run:
 
 ```bash
-chmod +x install-global-hook.sh
-./install-global-hook.sh
+chmod +x install-hook.sh
+./install-hook.sh /path/to/target-repository
 ```
 
 That installer:
 
 - marks the hook as executable
-- creates the global hooks directory if needed
-- symlinks `pre-commit-windows-paths` as your global `pre-commit`
-- runs `git config --global core.hooksPath ...`
+- creates the target repository hooks directory if needed
+- symlinks `pre-commit-windows-paths` as `.git/hooks/pre-commit` inside that repository
 
-After that, every `git commit` in every repository using your global Git config will run this hook first.
+After that, `git commit` will run this hook only in that repository.
 
 ## Manual Installation
 
-If you prefer to install it manually:
+If you prefer to install it manually in a specific repository:
 
 ```bash
-mkdir -p ~/.config/git/hooks
-ln -sf "$(pwd)/pre-commit-windows-paths" ~/.config/git/hooks/pre-commit
-chmod +x "$(pwd)/pre-commit-windows-paths"
-chmod +x ~/.config/git/hooks/pre-commit
-git config --global core.hooksPath ~/.config/git/hooks
+cd /path/to/target-repository
+mkdir -p .git/hooks
+ln -sf /path/to/git-pre-commit-hook-windows-path-check/pre-commit-windows-paths .git/hooks/pre-commit
+chmod +x /path/to/git-pre-commit-hook-windows-path-check/pre-commit-windows-paths
+chmod +x .git/hooks/pre-commit
 ```
 
 ## Optional Tuning
@@ -73,7 +70,15 @@ You can tune the limits and the estimated Windows clone destination with environ
 ```bash
 export REPOPATH_SANITIZER_MAX_PATH=260
 export REPOPATH_SANITIZER_MAX_SEGMENT=255
-export REPOPATH_SANITIZER_CHECKOUT_ROOT='C:\Users\Juan\Documents\Projects'
+export REPOPATH_SANITIZER_CHECKOUT_ROOT='C:\Users\YourUser\Documents\Projects'
+```
+
+Replace `YourUser` with the actual Windows username, or use the real base folder where the repository is usually cloned on Windows.
+
+This variable is only used to estimate the final checkout path on Windows:
+
+```text
+<checkout_root>\<repo_name>\<relative_path>
 ```
 
 If you want these settings always active, place them in your shell startup file such as `~/.bashrc`.
@@ -96,17 +101,11 @@ Example categories you may see:
 
 ## Uninstall
 
-If you want to remove the global hook:
+If you want to remove the hook from one repository:
 
 ```bash
-chmod +x uninstall-global-hook.sh
-./uninstall-global-hook.sh
-```
-
-If you want to stop using the global hooks directory entirely:
-
-```bash
-git config --global --unset core.hooksPath
+chmod +x uninstall-hook.sh
+./uninstall-hook.sh /path/to/target-repository
 ```
 
 ## Notes
@@ -114,4 +113,3 @@ git config --global --unset core.hooksPath
 - The hook checks only **staged** paths, because those are the ones about to enter history.
 - It is self-contained and does not depend on another local project path.
 - It works independently of any GUI application.
-- If a specific repository defines its own `core.hooksPath`, that repository setting overrides the global one.
